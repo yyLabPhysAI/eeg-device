@@ -25,24 +25,26 @@ class Client():
         if datatype == 'real':
             start_real = Real(self)
             start_real.collect_data_live()
-            m = start_real.read_data()
-            for i in range(10):
-                time.sleep(1)
-                d = start_real.read_data()
-                m = np.append(m, d, axis=1)
-            return m
+
         else:
             start_fake = Fake(self)
             self.file_path = start_fake.choose_file()
             self.fake_matrix = start_fake.read_file()
-            self.times_to_go_over=start_fake.passes_calc()
+            self.times_to_go_over = start_fake.passes_calc()
             return self.fake_matrix, self.times_to_go_over
 
-
+    def real_data_collection(self):
+        start_real = Real(self)
+        m = start_real.read_data()
+        for i in range(10):
+            time.sleep(1)
+            d = start_real.read_data()
+            m = np.append(m, d, axis=1)
+        return m
 class Real(Client):
     pass
 
-    def collect_data_live(self):
+    def start_stream(self):
         self.board.prepare_session()
         self.board.start_stream()
 
@@ -74,64 +76,57 @@ class Fake(Client):
         return self.times_to_go_over
 
 
-def the_data(datatype,out_q):
+def the_data(datatype, out_q):
     if datatype == 'real':
-        start_real = Real()
-        start_real.collect_data_live()
-        m = start_real.read_data()
-        for i in range(120):
+        start_real = Real(datatype)
+        start_real.start_stream()
+        counter = 0
+        while counter < 600:
             time.sleep(1)
             d = start_real.read_data()
-            m = np.append(m, d, axis=1)
-        start_real.stop_stream()
-        return m
+            A = pd.DataFrame(d)
+            A = A.transpose()
+            out_q.put(A)
+            counter += 1
+
     if datatype == 'fake':
         fake_matrix = Client(datatype)
         the_fake_matrix, passes = fake_matrix.collect_data(datatype)
         for i in range(passes):
             time.sleep(1)
-            temp_df = the_fake_matrix[i * 256:i * 256+256]
+            temp_df = the_fake_matrix[i * 256:i * 256 + 256]
             out_q.put(temp_df)
 
+def get_all_queue_result(queue):
+
+    result_list = []
+    while not queue.empty():
+        result_list.append(queue.get())
+    return result_list
 
 def testing_queue(in_q):
     while True:
         time.sleep(5)
-        data = in_q.get()
-        print(data)
+        temporary_df = pd.DataFrame()
+        for i in range(in_q.qsize()):
+
+            temporary_df=pd.concat([temporary_df, in_q.get()])
+
+        # data = get_all_queue_result(in_q)
+        # temporary_df = pd.DataFrame(data)
+        # temporary_df.transpose()
+        print(type(temporary_df))
+        print(temporary_df)
         in_q.task_done()
 
 
-datatype = 'fake'
+datatype = 'real'
 q = Queue()
 t1 = Thread(target=the_data, args=(datatype, q))
-t2 = Thread(target=testing_queue, args=(q, ))
+t2 = Thread(target=testing_queue, args=(q,))
 t1.start()
 t2.start()
 q.join()
-
-# df = pd.DataFrame(data=transposed)
-# print(df.shape)
-# df.to_csv('outfile.txt', sep=' ', header=False, index=False)
-
-
-# params = BrainFlowInputParams()
-# params.serial_port = 'com3'
-# params.board_id = 0
-# board = BoardShim(0,params)
-
-# test = Real()
-# board = test.collect_data()
-# # time.sleep(1)
-# matrix = board.get_board_data()
-# r = 2
-# for i in range(r):
-#     time.sleep(1)
-#     data = board.get_board_data()
-#     matrix = np.append(matrix, data, axis=1)
-# board.stop_stream()
-# board.release_session()
-
 
 # matrix = c.collec_data(datatype)
 # x = matrix.shape[1] - 1
