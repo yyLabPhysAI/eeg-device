@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import filedialog
 from queue import Queue
 from threading import Thread
-
+# import streamlit as st
 
 class Client():
     def __init__(self, datatype):
@@ -41,6 +41,8 @@ class Client():
             d = start_real.read_data()
             m = np.append(m, d, axis=1)
         return m
+
+
 class Real(Client):
     pass
 
@@ -104,7 +106,7 @@ def get_all_queue_result(queue):
         result_list.append(queue.get())
     return result_list
 
-def testing_queue(in_q):
+def testing_queue(in_q,all_data):
     while True:
         time.sleep(5)
         temporary_df = pd.DataFrame()
@@ -115,18 +117,24 @@ def testing_queue(in_q):
         # data = get_all_queue_result(in_q)
         # temporary_df = pd.DataFrame(data)
         # temporary_df.transpose()
-        print(type(temporary_df))
-        print(temporary_df)
+        # print(type(temporary_df))
+        all_data = pd.concat([all_data,temporary_df],axis=0)
+        print(all_data)
         in_q.task_done()
 
-
-datatype = 'real'
+all_data = pd.DataFrame()
+datatype = 'fake'
 q = Queue()
 t1 = Thread(target=the_data, args=(datatype, q))
-t2 = Thread(target=testing_queue, args=(q,))
+t2 = Thread(target=testing_queue, args=(q,all_data))
 t1.start()
 t2.start()
 q.join()
+import streamlit as st
+
+st.set_page_config(page_title="EEG pred\det",page_icon="::")
+st.subheader("hi")
+st.line_chart(all_data)
 
 # matrix = c.collec_data(datatype)
 # x = matrix.shape[1] - 1
