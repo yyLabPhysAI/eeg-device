@@ -1,3 +1,4 @@
+import threading
 import time
 import numpy as np
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
@@ -6,6 +7,10 @@ import tkinter as tk
 from tkinter import filedialog
 from queue import Queue
 from threading import Thread
+import streamlit as st
+from streamlit.scriptrunner import add_script_run_ctx
+
+
 # import streamlit as st
 
 class Client():
@@ -99,42 +104,54 @@ def the_data(datatype, out_q):
             temp_df = the_fake_matrix[i * 256:i * 256 + 256]
             out_q.put(temp_df)
 
-def get_all_queue_result(queue):
 
+def get_all_queue_result(queue):
     result_list = []
     while not queue.empty():
         result_list.append(queue.get())
     return result_list
 
-def testing_queue(in_q,all_data):
+
+def testing_queue(in_q, all_data):
+    st.title("EEG_TEST")
+    my_table = st.table(all_data)
     while True:
         time.sleep(5)
         temporary_df = pd.DataFrame()
         for i in range(in_q.qsize()):
-
-            temporary_df=pd.concat([temporary_df, in_q.get()])
+            temporary_df = pd.concat([temporary_df, in_q.get()])
 
         # data = get_all_queue_result(in_q)
         # temporary_df = pd.DataFrame(data)
         # temporary_df.transpose()
         # print(type(temporary_df))
-        all_data = pd.concat([all_data,temporary_df],axis=0)
+        all_data = pd.concat([all_data, temporary_df], axis=0)
         print(all_data)
+        print(type(temporary_df))
+        st.line_chart(data=temporary_df.iloc[:, 1])
+        my_table.add_rows(temporary_df)
         in_q.task_done()
 
-all_data = pd.DataFrame()
-datatype = 'fake'
-q = Queue()
-t1 = Thread(target=the_data, args=(datatype, q))
-t2 = Thread(target=testing_queue, args=(q,all_data))
-t1.start()
-t2.start()
-q.join()
-import streamlit as st
 
-st.set_page_config(page_title="EEG pred\det",page_icon="::")
-st.subheader("hi")
-st.line_chart(all_data)
+def main():
+    st.set_page_config(page_title="EEG pred\det", page_icon="::")
+    all_data = pd.DataFrame()
+    datatype = 'fake'
+    q = Queue()
+    t1 = Thread(target=the_data, args=(datatype, q))
+    t2 = Thread(target=testing_queue, args=(q, all_data))
+    add_script_run_ctx(t2)
+    t1.start()
+    t2.start()
+    q.join()
+
+    # st.set_page_config(page_title="EEG pred\det", page_icon="::")
+    # st.subheader("hi")
+    # st.line_chart(all_data)
+
+
+if __name__ == '__main__':
+    main()
 
 # matrix = c.collec_data(datatype)
 # x = matrix.shape[1] - 1
