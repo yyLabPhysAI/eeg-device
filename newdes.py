@@ -14,7 +14,7 @@ from streamlit.scriptrunner import add_script_run_ctx
 
 
 class Client():
-    def __init__(self, datatype, q):
+    def __init__(self, datatype, q, q_for_ploting):
         self.params = BrainFlowInputParams()
         self.params.serial_port = 'com3'
         self.params.board_id = 0
@@ -26,7 +26,7 @@ class Client():
         self.fake_df = None
         self.times_to_go_over = 0
         self.q = q
-
+        self.q_for_ploting = q_for_ploting
 
     def print_data(self):
         while True:
@@ -40,23 +40,24 @@ class Client():
 
     def collect_data(self, datatype):
         if datatype == 'real':
-            start_real = Real(self, q)
+            start_real = Real(self, self.q, self.q_for_ploting)
             start_real.start_stream()
             time.sleep(1)
             while True:
                 d = start_real.read_data()
                 A = pd.DataFrame(d)
                 A = A.transpose()
-                q.put(A)
+                self.q.put(A)
         else:
-            start_fake = Fake(self, q)
+            start_fake = Fake(self, self.q, self.q_for_ploting)
             start_fake.choose_file()
             data = start_fake.read_file()
             times = start_fake.passes_calc()
             for i in range(times):
                 time.sleep(1)
                 temp_df = data[i * 256:i * 256 + 256]
-                q.put(temp_df)
+                self.q.put(temp_df)
+                self.q_for_ploting.put(temp_df)
 
 
 class Real(Client):
@@ -115,12 +116,38 @@ class Fake(Client):
 #             for i in range(1, len(data), 2):
 #                 time.sleep(0.058)
 #                 placeholder.line_chart(data.iloc[i:i + 50, 1:5])
+def streaming_app_for_mais_lano_n2rt_rase():
+    datatype = 'fake'
+    header = st.container()
+    dataset = st.container()
+    features = st.container()
+    modelTraining = st.container()
 
-datatype = 'fake'
-q = Queue()
-c = Client(datatype, q)
-t1 = Thread(target=c.collect_data, args=(datatype, ))
-t2 = Thread(target=c.print_data)
-t1.start()
-t2.start()
-q.join()
+    q = Queue()
+    q_for_ploting = Queue()
+    c = Client(datatype, q,q_for_ploting)
+    t1 = Thread(target=c.collect_data, args=(datatype, ))
+    t2 = Thread(target=c.print_data)
+    t1.start()
+    t2.start()
+    q.join()
+    with header:
+        st.title('welcome to my project')
+        st.text('description')
+    with dataset:
+        st.header('Dataset')
+        st.text('info about dataset')
+    for i in range(10):
+        time.sleep(15)
+        data = pd.DataFrame()
+        for j in range(q_for_ploting.qsize()):
+            data = pd.concat([data, q_for_ploting.get()])
+        data = abs(data)/1000
+        placeholder = st.empty()
+        placeholder.line_chart(data.iloc[1:50, 1:5])
+        with placeholder.container():
+            for k in range(1, len(data), 2):
+                time.sleep(0.058)
+                placeholder.line_chart(data.iloc[k:k + 50, 1:5])
+
+streaming_app_for_mais_lano_n2rt_rase()
