@@ -88,8 +88,8 @@ def the_data(datatype, out_q):
         start_real = Real(datatype)
         start_real.start_stream()
         counter = 0
+        time.sleep(1)
         while counter < 600:
-            time.sleep(1)
             d = start_real.read_data()
             A = pd.DataFrame(d)
             A = A.transpose()
@@ -99,8 +99,8 @@ def the_data(datatype, out_q):
     if datatype == 'fake':
         fake_matrix = Client(datatype)
         the_fake_matrix, passes = fake_matrix.collect_data(datatype)
+        time.sleep(1)
         for i in range(passes):
-            time.sleep(1)
             temp_df = the_fake_matrix[i * 256:i * 256 + 256]
             out_q.put(temp_df)
 
@@ -113,54 +113,57 @@ def get_all_queue_result(queue):
 
 
 def testing_queue(in_q, all_data):
-    st.title("EEG_TEST")
-    my_table = st.table(all_data)
     while True:
         time.sleep(5)
         temporary_df = pd.DataFrame()
         for i in range(in_q.qsize()):
             temporary_df = pd.concat([temporary_df, in_q.get()])
-
-        # data = get_all_queue_result(in_q)
-        # temporary_df = pd.DataFrame(data)
-        # temporary_df.transpose()
-        # print(type(temporary_df))
         all_data = pd.concat([all_data, temporary_df], axis=0)
-        print(all_data)
-        print(type(temporary_df))
-        st.line_chart(data=temporary_df.iloc[:, 1])
-        my_table.add_rows(temporary_df)
         in_q.task_done()
 
 
+def streamlitapp(q):
+    header = st.container()
+    dataset = st.container()
+    features = st.container()
+    modelTraining = st.container()
+
+    with header:
+        st.title('welcome to my project')
+        st.text('description')
+    with features:
+        st.header('features')
+        st.text('info about features')
+    with dataset:
+        st.header('Dataset')
+        st.text('info about dataset')
+        # data =
+        data = abs(data) / 1000
+        placeholder = st.empty()
+        placeholder.line_chart(data.iloc[1:50, 1:5])
+        with placeholder.container():
+            for i in range(1, len(data), 2):
+                time.sleep(0.058)
+                placeholder.line_chart(data.iloc[i:i + 50, 1:5])
+    with modelTraining:
+        st.header('time to train the model')
+        st.text('info about training the model')
+
+
 def main():
-    st.set_page_config(page_title="EEG pred\det", page_icon="::")
-    all_data = pd.DataFrame()
     datatype = 'fake'
     q = Queue()
+    all_data = pd.DataFrame()
     t1 = Thread(target=the_data, args=(datatype, q))
     t2 = Thread(target=testing_queue, args=(q, all_data))
-    add_script_run_ctx(t2)
     t1.start()
     t2.start()
+    t3 = Thread(target=streamlitapp, args=(q,))
+    add_script_run_ctx(t3)
+    t3.start()
     q.join()
-
-    # st.set_page_config(page_title="EEG pred\det", page_icon="::")
-    # st.subheader("hi")
-    # st.line_chart(all_data)
 
 
 if __name__ == '__main__':
     main()
 
-# matrix = c.collec_data(datatype)
-# x = matrix.shape[1] - 1
-# frequency = BoardShim.get_sampling_rate(params.board_id)
-# print(frequency)
-# t = np.linspace(0, 60, num=x)
-# test = (matrix[2, 1:]) / 1000000
-# eegmatrix = matrix[0:6, :]
-# transposed = eegmatrix.T
-# plt.plot(t, test)
-#
-# plt.show()
