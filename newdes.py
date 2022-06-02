@@ -30,8 +30,9 @@ class Client():
         self.q_for_ploting = q_for_ploting
 
     def start_print(self):
-        t2 = Thread(target=Client.print_data, args=(self, ))
+        t2 = Thread(target=Client.print_data, args=(self,))
         t2.start()
+
     def print_data(self):
         while True:
             time.sleep(5)
@@ -39,15 +40,17 @@ class Client():
             for i in range(self.q.qsize()):
                 temporary_df = pd.concat([temporary_df, self.q.get()])
                 self.q.task_done()
+
     def start_collect(self, dataype):
-        t1 = Thread(target=Client.collect_data, args=(self,dataype ))
+        t1 = Thread(target=Client.collect_data, args=(self, dataype))
         t1.start()
+
     def collect_data(self, datatype):
         if datatype == 'real':
             start_real = Real(self, self.q, self.q_for_ploting)
             start_real.start_stream()
             while True:
-                time.sleep(1)
+                time.sleep(0.2)
                 d = start_real.read_data()
                 A = pd.DataFrame(d)
                 A = A.transpose()
@@ -61,8 +64,8 @@ class Client():
             data = start_fake.read_file()
             times = start_fake.passes_calc()
             for i in range(times):
-                time.sleep(1)
-                temp_df = data[i * 256:i * 256 + 256]
+                time.sleep(1/64)
+                temp_df = data[i * 4:i * 4 + 4]
                 self.q.put(temp_df)
                 self.q_for_ploting.put(temp_df)
 
@@ -96,7 +99,7 @@ class Fake(Client):
 
     def passes_calc(self):
         rows = len(self.df.index)
-        self.times_to_go_over = int(np.floor(rows / 256))
+        self.times_to_go_over = int(np.floor(rows / 4))
         return self.times_to_go_over
 
 
@@ -108,7 +111,7 @@ def streaming_app_for_mais_lano_n2rt_rase():
     q_for_plotting = Queue()
     c = Client(datatype, q, q_for_plotting)
     with header:
-        st.title('welcome to my project')
+        st.title('Real time EEg Data')
         st.text('description')
     with dataset:
         st.header('Dataset')
@@ -118,10 +121,18 @@ def streaming_app_for_mais_lano_n2rt_rase():
     q.join()
     placeholder = st.empty()
 
-    while True:
-        data = pd.DataFrame()
-        with placeholder.container():
-            data = abs(pd.concat([data, q_for_plotting.get()/1000]))
-            placeholder.line_chart(data.iloc[:, 1:4])
-            time.sleep(1)
+    data = pd.DataFrame()
+    time.sleep(2.5)
+
+    with placeholder.container():
+
+        while True:
+
+            data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+            placeholder.line_chart(data.iloc[-500:, 1:4])
+
+            q_for_plotting.task_done()
+            time.sleep(0.01)
+
+
 streaming_app_for_mais_lano_n2rt_rase()
