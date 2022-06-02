@@ -150,7 +150,7 @@ def streamlitapp(q):
 
 
 def main():
-    datatype = 'fake'
+    datatype = 'real'
     q = Queue()
     all_data = pd.DataFrame()
     t1 = Thread(target=the_data, args=(datatype, q))
