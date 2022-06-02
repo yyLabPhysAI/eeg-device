@@ -8,6 +8,7 @@ from tkinter import filedialog
 from queue import Queue
 from threading import Thread
 from pathlib import Path
+from streamlit import caching
 
 import streamlit as st
 from streamlit.scriptrunner import add_script_run_ctx
@@ -34,9 +35,8 @@ class Client():
             temporary_df = pd.DataFrame()
             for i in range(self.q.qsize()):
                 temporary_df = pd.concat([temporary_df, self.q.get()])
-                print(temporary_df)
             # all_data = pd.concat([all_data, temporary_df], axis=0)
-            self.q.task_done()
+                self.q.task_done()
 
     def collect_data(self, datatype):
         if datatype == 'real':
@@ -92,61 +92,37 @@ class Fake(Client):
         self.times_to_go_over = int(np.floor(rows / 256))
         return self.times_to_go_over
 
-# def streamlitapp(datatype):
-#     c = Client(datatype)
-#     header = st.container()
-#     dataset = st.container()
-#     features = st.container()
-#     modelTraining = st.container()
-#
-#     with header:
-#         st.title('welcome to my project')
-#         st.text('description')
-#     with features:
-#         st.header('features')
-#         st.text('info about features')
-#     with dataset:
-#         st.header('Dataset')
-#         st.text('info about dataset')
-#         # data =
-#         data = abs(data) / 1000
-#         placeholder = st.empty()
-#         placeholder.line_chart(data.iloc[1:50, 1:5])
-#         with placeholder.container():
-#             for i in range(1, len(data), 2):
-#                 time.sleep(0.058)
-#                 placeholder.line_chart(data.iloc[i:i + 50, 1:5])
+
 def streaming_app_for_mais_lano_n2rt_rase():
     datatype = 'fake'
     header = st.container()
     dataset = st.container()
-    features = st.container()
-    modelTraining = st.container()
-
     q = Queue()
-    q_for_ploting = Queue()
-    c = Client(datatype, q,q_for_ploting)
+    q_for_plotting = Queue()
+    c = Client(datatype, q, q_for_plotting)
     t1 = Thread(target=c.collect_data, args=(datatype, ))
     t2 = Thread(target=c.print_data)
     t1.start()
     t2.start()
-    q.join()
+    # q.join()
     with header:
         st.title('welcome to my project')
         st.text('description')
     with dataset:
         st.header('Dataset')
         st.text('info about dataset')
+    placeholder = st.empty()
+    time.sleep(15)
     for i in range(10):
-        time.sleep(15)
         data = pd.DataFrame()
-        for j in range(q_for_ploting.qsize()):
-            data = pd.concat([data, q_for_ploting.get()])
+        for j in range(q_for_plotting.qsize()):
+            data = pd.concat([data, q_for_plotting.get()])
         data = abs(data)/1000
-        placeholder = st.empty()
-        placeholder.line_chart(data.iloc[1:50, 1:5])
+        # placeholder = st.empty()
+        # placeholder.line_chart(data.iloc[1:50, 1:5])
         with placeholder.container():
-            for k in range(1, len(data), 2):
+            print(len(data))
+            for k in range(1, len(data), 20+int(len(data)*0.058/15)):
                 time.sleep(0.058)
                 placeholder.line_chart(data.iloc[k:k + 50, 1:5])
 
