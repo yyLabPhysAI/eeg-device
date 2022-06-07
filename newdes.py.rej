@@ -1,0 +1,12 @@
+diff a/newdes.py b/newdes.py	(rejected hunks)
+@@ -30,8 +30,9 @@
+         self.q_for_ploting = q_for_ploting
+ 
+     def start_print(self):
+-        t2 = Thread(target=Client.print_data, args=(self, ))
++        t2 = Thread(target=Client.print_data, args=(self,))
+         t2.start()
++
+     def print_data(self):
+         while True:
+             time.sleep(5)
