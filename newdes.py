@@ -103,8 +103,8 @@ class Fake(Client):
         return self.times_to_go_over
 
 
-def streaming_app_for_mais_lano_n2rt_rase():
-    datatype = 'real'
+def streaming_app():
+    datatype = 'fake'
     q = Queue()
     q_for_plotting = Queue()
     c = Client(datatype, q, q_for_plotting)
@@ -166,4 +166,4 @@ def streaming_app_for_mais_lano_n2rt_rase():
             time.sleep(0.01)
 
 
-streaming_app_for_mais_lano_n2rt_rase()
+streaming_app()
