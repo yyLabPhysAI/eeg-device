@@ -158,35 +158,45 @@ def streaming_app():
             ("YES", "NO")
         )
     with placeholder.container():
-        fig, ax = plt.subplots(3)
 
         while True:
+
             data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-            ax[0].plot(data.iloc[-500:, 1], color='red')
-            ax[0].set_xticks([])
-            ax[0].set_yticks([])
-            ax[0].set_title('EEG Channel 1')
-            ax[1].plot(data.iloc[-500:, 2], color='blue')
-            ax[1].set_xticks([])
-            ax[1].set_yticks([])
-            ax[1].set_title('EEG Channel 2')
-            ax[2].plot(data.iloc[-500:, 3], color='green')
-            ax[2].set_xticks([])
-            ax[2].set_yticks([])
-            ax[2].set_title('EEG Channel 3')
-            plt.draw()
-            placeholder.pyplot(fig)
+            placeholder.line_chart(data.iloc[-500:, 1:4])
+            print(len(data))
             q_for_plotting.task_done()
             time.sleep(0.01)
-
+    # with placeholder.container():
+    #     fig, ax = plt.subplots(3)
+    #     while True:
+    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+    #         ax[0].plot(data.iloc[-500:, 1], color='red')
+    #         # ax[0].set_xlim([0, 500])
+    #         # ax[0].set_xticks([])
+    #         # ax[0].set_yticks([])
+    #         ax[0].set_title('EEG Channel 1')
+    #         ax[1].plot(data.iloc[-500:, 2], color='blue')
+    #         # ax[1].set_xticks([])
+    #         # ax[1].set_yticks([])
+    #         # ax[1].set_xlim([0, 500])
+    #         ax[1].set_title('EEG Channel 2/')
+    #         ax[2].plot(data.iloc[-500:, 3], color='green')
+    #         # ax[2].set_xticks([])
+    #         # ax[2].set_yticks([])
+    #         # ax[2].set_xlim([0, 500])
+    #         ax[2].set_title('EEG Channel 3')
+    #         plt.draw()
+    #         placeholder.pyplot(fig)
+    #         q_for_plotting.task_done()
+    #         time.sleep(0.01)
 
     # with placeholder.container():
-    #
+    #     fig = plt.figure()
+    #     plt.ion()
     #     while True:
-    #
     #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-    #         placeholder.line_chart(data.iloc[-500:, 1:4])
-    #
+    #         plt.plot(data.iloc[-500:, 1], color='red')
+    #         placeholder.pyplot(fig)
     #         q_for_plotting.task_done()
     #         time.sleep(0.01)
 
