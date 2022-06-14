@@ -1,5 +1,7 @@
 import threading
 import time
+
+import altair
 import numpy as np
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 import pandas as pd
@@ -39,6 +41,7 @@ class Client():
     def print_data(self):
         while True:
             time.sleep(5)
+            # return 1
             temporary_df = pd.DataFrame()
             for i in range(self.q.qsize()):
                 temporary_df = pd.concat([temporary_df, self.q.get()])
@@ -106,6 +109,7 @@ class Fake(Client):
         return self.times_to_go_over
 
 
+
 def streaming_app():
     datatype = 'fake'
     q = Queue()
@@ -139,16 +143,17 @@ def streaming_app():
         "Who would you like to contact in case of an emergency?",
         ("Contact1", "Contact2", "Contact3")
     )
-    col1, col2= st.columns((4, 1))
+    col1, col2,col3= st.columns((10, 4, 1))
     col1.header("Live Data")
     col2.header("Result")
-    col2.image("result.jpg", width=100)
+    col2.text('No sign of seizure')
+    # col2.image("result.jpg", width=100)
 
     c.start_collect(datatype)
     c.start_print()
     q.join()
     placeholder = col1.empty()
-
+    placeholder_2 = col1.empty()
     data = pd.DataFrame()
     time.sleep(2.5)
 
@@ -157,34 +162,25 @@ def streaming_app():
             "are you wearing the deivce?",
             ("YES", "NO")
         )
-    with placeholder.container():
-
-        while True:
-
-            data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-            placeholder.line_chart(data.iloc[-500:, 1:4])
-            print(len(data))
-            q_for_plotting.task_done()
-            time.sleep(0.01)
+    # lines = altair.Chart(data).mark_line().encode(x=altair.X('1:T'))
+    # # with placeholder.container():
+    # line_plot = st.altair_chart(lines)
+    # while True:
+    #     data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+    #     step_df = data.iloc[-500:, 1]
+    #     lines = plot_animation(step_df)
+    #     line_plot = line_plot.altair_chart(lines)
+    #     time.sleep(0.1)
     # with placeholder.container():
-    #     fig, ax = plt.subplots(3)
     #     while True:
+    #         fig, ax = plt.subplots(3)
     #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-    #         ax[0].plot(data.iloc[-500:, 1], color='red')
-    #         # ax[0].set_xlim([0, 500])
-    #         # ax[0].set_xticks([])
-    #         # ax[0].set_yticks([])
-    #         ax[0].set_title('EEG Channel 1')
-    #         ax[1].plot(data.iloc[-500:, 2], color='blue')
-    #         # ax[1].set_xticks([])
-    #         # ax[1].set_yticks([])
-    #         # ax[1].set_xlim([0, 500])
-    #         ax[1].set_title('EEG Channel 2/')
-    #         ax[2].plot(data.iloc[-500:, 3], color='green')
-    #         # ax[2].set_xticks([])
-    #         # ax[2].set_yticks([])
-    #         # ax[2].set_xlim([0, 500])
-    #         ax[2].set_title('EEG Channel 3')
+    #         print(data.shape)
+    #         ax[0].plot(data.iloc[-120:, 1])
+    #         ax[1].plot(data.iloc[-120:, 2])
+    #         ax[2].plot(data.iloc[-120:, 3])
+    #         # plt.xticks([])
+    #         # plt.yticks([])
     #         plt.draw()
     #         placeholder.pyplot(fig)
     #         q_for_plotting.task_done()
@@ -192,13 +188,32 @@ def streaming_app():
 
     # with placeholder.container():
     #     fig = plt.figure()
-    #     plt.ion()
     #     while True:
-    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-    #         plt.plot(data.iloc[-500:, 1], color='red')
+    #         test = [data,q_for_plotting.get() / 1000]
+    #         data = abs(pd.concat[test,data])
+    #         data = data.iloc[-500:, 1:4]
     #         placeholder.pyplot(fig)
     #         q_for_plotting.task_done()
     #         time.sleep(0.01)
+    with placeholder.container():
+        while True:
+            data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+            data.head()
+            chart = (
+                altair.Chart(
+                    data=pd.DataFrame(data.iloc[-500:, :]),
+                    title="EEG Channel 1",
+                )
+                    .mark_line()
+                    .encode(
+                    x=altair.X("samples", axis=altair.Axis(title="samples")),
+                    y=altair.Y("channel 1", axis=altair.Axis(title="channel 1")),
+                )
+            )
+
+            placeholder.altair_chart(chart)
+            q_for_plotting.task_done()
+            time.sleep(0.01)
 
 
 streaming_app()
