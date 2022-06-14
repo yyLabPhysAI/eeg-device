@@ -58,7 +58,8 @@ class Client():
             while True:
                 time.sleep(0.2)
                 d = start_real.read_data()
-                A = pd.DataFrame(d)
+                A = pd.DataFrame(d[1:5], columns=["samples", "channel 1", "channel 2", "channel 3",
+                                                  "channel 4", "channel 5"])
                 A = A.transpose()
                 B = A
                 self.q.put(A)
@@ -70,7 +71,7 @@ class Client():
             data = start_fake.read_file()
             times = start_fake.passes_calc()
             for i in range(times):
-                time.sleep(1/64)
+                time.sleep(1 / 64)
                 temp_df = data[i * 4:i * 4 + 4]
                 self.q.put(temp_df)
                 self.q_for_ploting.put(temp_df)
@@ -109,7 +110,6 @@ class Fake(Client):
         return self.times_to_go_over
 
 
-
 def streaming_app():
     datatype = 'fake'
     q = Queue()
@@ -143,7 +143,7 @@ def streaming_app():
         "Who would you like to contact in case of an emergency?",
         ("Contact1", "Contact2", "Contact3")
     )
-    col1, col2,col3= st.columns((10, 4, 1))
+    col1, col2, col3 = st.columns((10, 4, 1))
     col1.header("Live Data")
     col2.header("Result")
     col2.text('No sign of seizure')
