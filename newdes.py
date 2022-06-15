@@ -112,7 +112,7 @@ class Fake(Client):
 
 
 def streaming_app():
-    datatype = 'real'
+    datatype = 'fake'
     q = Queue()
     q_for_plotting = Queue()
     c = Client(datatype, q, q_for_plotting)
@@ -173,20 +173,20 @@ def streaming_app():
     #     lines = plot_animation(step_df)
     #     line_plot = line_plot.altair_chart(lines)
     #     time.sleep(0.1)
-    # with placeholder.container():
-    #     while True:
-    #         fig, ax = plt.subplots(3)
-    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-    #         print(data.shape)
-    #         ax[0].plot(data.iloc[-120:, 1])
-    #         ax[1].plot(data.iloc[-120:, 2])
-    #         ax[2].plot(data.iloc[-120:, 3])
-    #         # plt.xticks([])
-    #         # plt.yticks([])
-    #         plt.draw()
-    #         placeholder.pyplot(fig)
-    #         q_for_plotting.task_done()
-    #         time.sleep(0.01)
+    with placeholder.container():
+        while True:
+            fig, ax = plt.subplots(3)
+            data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+            print(data.shape)
+            ax[0].plot(data.iloc[-500:, 1])
+            ax[1].plot(data.iloc[-500:, 2])
+            ax[2].plot(data.iloc[-500:, 3])
+            # plt.xticks([])
+            # plt.yticks([])
+            plt.draw()
+            placeholder.plotly_chart(fig)
+            q_for_plotting.task_done()
+            time.sleep(0.01)
 
     # with placeholder.container():
     #     fig = plt.figure()
@@ -198,47 +198,47 @@ def streaming_app():
     #         q_for_plotting.task_done()
     #         time.sleep(0.01)
 
-    with placeholder.container():
-        while True:
-            data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-            chart = (
-                altair.Chart(
-                    data=pd.DataFrame(data.iloc[-250:, :]),
-                    title="EEG Channel 1",
-                )
-                    .mark_line()
-                    .encode(
-                    x=altair.X("samples", axis=altair.Axis(title="samples")),
-                    y=altair.Y("channel 1", axis=altair.Axis(title="channel 1"), scale=altair.Scale(domain=(30, 90))),
-                )
-            )
-            placeholder = placeholder.altair_chart(chart)
-            chart = (
-                altair.Chart(
-                    data=pd.DataFrame(data.iloc[-250:, :]),
-                    title="EEG Channel 1",
-                )
-                    .mark_line()
-                    .encode(
-                    x=altair.X("samples", axis=altair.Axis(title="samples")),
-                    y=altair.Y("channel 2", axis=altair.Axis(title="channel 2"), scale=altair.Scale(domain=(60, 120))),
-                )
-            )
-            placeholder_2 = placeholder_2.altair_chart(chart)
-            chart = (
-                altair.Chart(
-                    data=pd.DataFrame(data.iloc[-250:, :]),
-                    title="EEG Channel 1",
-                )
-                    .mark_line()
-                    .encode(
-                    x=altair.X("samples", axis=altair.Axis(title="samples")),
-                    y=altair.Y("channel 3", axis=altair.Axis(title="channel 3"), scale=altair.Scale(domain=(60, 120))),
-                )
-            )
-            placeholder_3 = placeholder_3.altair_chart(chart)
-            q_for_plotting.task_done()
-            time.sleep(0.01)
+    # with placeholder.container():
+    #     while True:
+    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+    #         chart = (
+    #             altair.Chart(
+    #                 data=pd.DataFrame(data.iloc[-250:, :]),
+    #                 title="EEG Channel 1",
+    #             )
+    #                 .mark_line()
+    #                 .encode(
+    #                 x=altair.X("samples", axis=altair.Axis(title="samples")),
+    #                 y=altair.Y("channel 1", axis=altair.Axis(title="channel 1")),
+    #             )
+    #         )
+    #         placeholder = placeholder.altair_chart(chart)
+    #         chart = (
+    #             altair.Chart(
+    #                 data=pd.DataFrame(data.iloc[-250:, :]),
+    #                 title="EEG Channel 1",
+    #             )
+    #                 .mark_line()
+    #                 .encode(
+    #                 x=altair.X("samples", axis=altair.Axis(title="samples")),
+    #                 y=altair.Y("channel 2", axis=altair.Axis(title="channel 2")),
+    #             )
+    #         )
+    #         placeholder_2 = placeholder_2.altair_chart(chart)
+    #         chart = (
+    #             altair.Chart(
+    #                 data=pd.DataFrame(data.iloc[-250:, :]),
+    #                 title="EEG Channel 1",
+    #             )
+    #                 .mark_line()
+    #                 .encode(
+    #                 x=altair.X("samples", axis=altair.Axis(title="samples")),
+    #                 y=altair.Y("channel 3", axis=altair.Axis(title="channel 3")),
+    #             )
+    #         )
+    #         placeholder_3 = placeholder_3.altair_chart(chart)
+    #         q_for_plotting.task_done()
+    #         time.sleep(0.01)
 
 
 streaming_app()
