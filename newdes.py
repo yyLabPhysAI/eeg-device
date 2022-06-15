@@ -3,6 +3,7 @@ import time
 
 import altair
 import numpy as np
+from IPython.core.display_functions import display
 from brainflow.board_shim import BoardShim, BrainFlowInputParams, BoardIds
 import pandas as pd
 import tkinter as tk
@@ -10,6 +11,8 @@ from tkinter import filedialog
 from queue import Queue
 from threading import Thread
 from pathlib import Path
+
+from numpy import NaN
 from streamlit import caching
 
 import streamlit as st
@@ -112,7 +115,7 @@ class Fake(Client):
 
 
 def streaming_app():
-    datatype = 'fake'
+    datatype = 'real'
     q = Queue()
     q_for_plotting = Queue()
     c = Client(datatype, q, q_for_plotting)
@@ -176,13 +179,19 @@ def streaming_app():
     with placeholder.container():
         while True:
             fig, ax = plt.subplots(3)
-            data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
-            print(data.shape)
+            data = abs(pd.concat([data, q_for_plotting.get() / 1000],ignore_index=True))
             ax[0].plot(data.iloc[-500:, 1])
+            # ax[0].set_title('EEG 1')
+            ax[0].set_xticks([])
+            ax[0].set_yticks([])
             ax[1].plot(data.iloc[-500:, 2])
+            # ax[1].set_title('\n EEG 2')
+            ax[1].set_xticks([])
+            ax[1].set_yticks([])
             ax[2].plot(data.iloc[-500:, 3])
-            # plt.xticks([])
-            # plt.yticks([])
+            ax[2].set_xticks([])
+            ax[2].set_yticks([])
+            # ax[2].set_title('\n EEG 3')
             plt.draw()
             placeholder.plotly_chart(fig)
             q_for_plotting.task_done()
@@ -200,10 +209,10 @@ def streaming_app():
 
     # with placeholder.container():
     #     while True:
-    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000],ignore_index=True))
     #         chart = (
     #             altair.Chart(
-    #                 data=pd.DataFrame(data.iloc[-250:, :]),
+    #                 data=pd.DataFrame(data.iloc[-500:, :]),
     #                 title="EEG Channel 1",
     #             )
     #                 .mark_line()
@@ -215,7 +224,7 @@ def streaming_app():
     #         placeholder = placeholder.altair_chart(chart)
     #         chart = (
     #             altair.Chart(
-    #                 data=pd.DataFrame(data.iloc[-250:, :]),
+    #                 data=pd.DataFrame(data.iloc[-500:, :]),
     #                 title="EEG Channel 1",
     #             )
     #                 .mark_line()
@@ -227,7 +236,7 @@ def streaming_app():
     #         placeholder_2 = placeholder_2.altair_chart(chart)
     #         chart = (
     #             altair.Chart(
-    #                 data=pd.DataFrame(data.iloc[-250:, :]),
+    #                 data=pd.DataFrame(data.iloc[-500:, :]),
     #                 title="EEG Channel 1",
     #             )
     #                 .mark_line()
@@ -237,6 +246,15 @@ def streaming_app():
     #             )
     #         )
     #         placeholder_3 = placeholder_3.altair_chart(chart)
+    #         q_for_plotting.task_done()
+    #         time.sleep(0.01)
+    # with placeholder.container():
+    #
+    #     while True:
+    #
+    #         data = abs(pd.concat([data, q_for_plotting.get() / 1000]))
+    #         placeholder.line_chart(data.iloc[-256:, 1:4])
+    #
     #         q_for_plotting.task_done()
     #         time.sleep(0.01)
 
